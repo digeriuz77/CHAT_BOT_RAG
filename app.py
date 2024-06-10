@@ -18,7 +18,7 @@ import pandas as pd
 load_dotenv()
 
 # Load OpenAI API key from Streamlit secrets
-openai_api_key = st.secrets["streamlit"]["openai_api_key"]
+openai_api_key = st.secrets["openai_api_key"]
 
 # Custom prompt template for rephrasing follow-up questions
 custom_template = """
