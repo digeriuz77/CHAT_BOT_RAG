@@ -11,6 +11,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 from htmlTemplates import css, bot_template, user_template
+from transcriber import Transcription
 import whisper
 
 # Load environment variables from .env file
@@ -103,13 +104,13 @@ def handle_userinput(user_question):
 def upload_audio_file():
     uploaded_file = st.file_uploader("Upload an audio file (.mp3 or .mp4)", type=["mp3", "mp4"])
     if uploaded_file is not None:
-        return uploaded_file.read()
+        return uploaded_file
     return None
 
-def transcribe_audio(audio_data):
-    model = whisper.load_model("base")  # Choose the appropriate model for your needs
-    result = model.transcribe(audio_data)
-    return result["text"]
+def transcribe_audio(files, model_name, translation):
+    transcription = Transcription(files)
+    transcription.transcribe(model_name, translation)
+    return transcription.output
 
 # Streamlit app layout
 def main():
@@ -135,12 +136,18 @@ def main():
     # Transcription functionality
     uploaded_audio = upload_audio_file()
     if uploaded_audio is not None:
-        transcription = transcribe_audio(uploaded_audio)
-        st.write(f"**Transcription:** {transcription}")
-
-        # Optionally, you can handle the transcribed text further
-        if st.button("Use Transcription as Input"):
-            handle_userinput(transcription)
+        model_name = st.selectbox("Select Whisper Model", ["tiny", "base", "small", "medium", "large"], index=1)
+        translation = st.checkbox("Translate to English", value=False)
+        
+        if st.button("Transcribe Audio"):
+            transcriptions = transcribe_audio([uploaded_audio], model_name, translation)
+            for transcription in transcriptions:
+                st.write(f"**Transcription of {transcription['name']}:** {transcription['text']}")
+                if translation:
+                    st.write(f"**Translation:** {transcription['translation']}")
+                
+                if st.button("Use Transcription as Input"):
+                    handle_userinput(transcription['text'])
 
 if __name__ == '__main__':
     main()
