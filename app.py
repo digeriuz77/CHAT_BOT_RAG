@@ -144,8 +144,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-```
-
-### Suggestions for next steps:
-**a.** Add unit tests for the transcription and PDF processing functions.
-**b.** Implement better session state management to handle conversation history more robustly.
