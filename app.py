@@ -11,8 +11,12 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 from htmlTemplates import css, bot_template, user_template
-from transcriber import Transcription
 import whisper
+from tempfile import NamedTemporaryFile
+from datetime import datetime
+import pathlib
+import io
+import matplotlib.colors as mcolors
 
 # Load environment variables from .env file
 load_dotenv()
@@ -100,6 +104,33 @@ def handle_userinput(user_question):
                 st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
     else:
         st.write("Please upload PDFs and click process")
+
+class Transcription:
+    def __init__(self, source: list):
+        self.source = source
+        self.audios = []
+
+        for file in self.source:
+            with NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+                tmp_file.write(file.getvalue())
+                self.audios.append(tmp_file.name)
+
+    def transcribe(self, model_name: str, translation: bool):
+        model = whisper.load_model(model_name)
+        self.output = []
+
+        for audio in self.audios:
+            result = model.transcribe(audio)
+            transcription = {
+                "name": os.path.basename(audio),
+                "text": result["text"],
+                "segments": result["segments"],
+                "language": result["language"]
+            }
+            if translation:
+                translated_text = model.translate(audio, to="en")
+                transcription["translation"] = translated_text["text"]
+            self.output.append(transcription)
 
 def upload_audio_file():
     uploaded_file = st.file_uploader("Upload an audio file (.mp3 or .mp4)", type=["mp3", "mp4"])
