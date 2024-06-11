@@ -16,7 +16,6 @@ from tempfile import NamedTemporaryFile
 from datetime import datetime
 import pathlib
 import io
-import matplotlib.colors as mcolors
 
 # Load environment variables from .env file
 load_dotenv()
